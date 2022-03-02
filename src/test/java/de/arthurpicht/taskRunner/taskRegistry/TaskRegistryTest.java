@@ -1,5 +1,6 @@
 package de.arthurpicht.taskRunner.taskRegistry;
 
+import de.arthurpicht.taskRunner.task.Task;
 import de.arthurpicht.taskRunner.task.TaskBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -103,6 +104,11 @@ public class TaskRegistryTest {
         assertEquals(Arrays.asList("X", "Y", "C", "E", "D"), taskList);
     }
 
-
+    @Test
+    public void getTask() {
+        TaskRegistry taskRegistry = createTaskRegistry();
+        Task task = taskRegistry.getTask("A");
+        assertEquals("A", task.getName());
+    }
 
 }

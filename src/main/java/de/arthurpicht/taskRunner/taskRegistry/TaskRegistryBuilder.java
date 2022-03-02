@@ -27,7 +27,7 @@ public class TaskRegistryBuilder {
         Dag<String> taskDag = createTaskDag();
         validate(taskDag);
         Map<String, List<String>> targetToTaskListMap = createOrderedTaskLists(taskDag);
-        return new TaskRegistry(targetToTaskListMap);
+        return new TaskRegistry(this.taskMap, targetToTaskListMap);
     }
 
     private void assertTaskNotPreexisting(Task task) {
