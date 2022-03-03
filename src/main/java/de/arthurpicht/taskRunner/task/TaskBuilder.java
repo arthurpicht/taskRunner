@@ -9,15 +9,19 @@ public class TaskBuilder {
     private String name;
     private String description;
     private boolean isTarget;
-    private TaskExecutionFunction taskExecution;
     private Set<String> dependencies;
+    private InputChangedFunction inputChanged;
+    private OutputExistsFunction outputExists;
+    private TaskExecutionFunction taskExecution;
 
     public TaskBuilder() {
         this.name = "";
         this.description = "";
         this.isTarget = false;
-        this.taskExecution = null;
         this.dependencies = new LinkedHashSet<>();
+        this.inputChanged = null;
+        this.outputExists = null;
+        this.taskExecution = null;
     }
 
     public TaskBuilder name(String name) {
@@ -35,13 +39,23 @@ public class TaskBuilder {
         return this;
     }
 
+    public TaskBuilder dependencies(String... dependencies) {
+        this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
+        return this;
+    }
+
     public TaskBuilder execute(TaskExecutionFunction taskExecution) {
         this.taskExecution = taskExecution;
         return this;
     }
 
-    public TaskBuilder dependencies(String... dependencies) {
-        this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
+    public TaskBuilder inputChanged(InputChangedFunction inputChanged) {
+        this.inputChanged = inputChanged;
+        return this;
+    }
+
+    public TaskBuilder outputExists(OutputExistsFunction outputExists) {
+        this.outputExists = outputExists;
         return this;
     }
 
@@ -50,7 +64,14 @@ public class TaskBuilder {
             throw new TaskDefinitionException("No name specified for task.");
         if (this.taskExecution == null)
             throw new TaskDefinitionException("No execution specified for task '" + this.name + "'.");
-        return new BasicTask(this.name, this.description, this.isTarget, this.dependencies, this.taskExecution);
+        return new BasicTask(
+                this.name,
+                this.description,
+                this.isTarget,
+                this.dependencies,
+                this.inputChanged,
+                this.outputExists,
+                this.taskExecution);
     }
 
 }

@@ -12,6 +12,14 @@ public interface Task {
 
     public Set<String> getDependencies();
 
+    public boolean hasInputChangedFunction();
+
+    public InputChangedFunction inputChanged();
+
+    public boolean hasOutputExistsFunction();
+
+    public OutputExistsFunction outputExists();
+
     public TaskExecutionFunction getExecution();
 
 }
