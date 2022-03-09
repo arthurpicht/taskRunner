@@ -83,11 +83,13 @@ public class Integration1Test {
         assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskList());
         assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskListSuccess());
         assertThrows(IllegalStateException.class, taskRunnerResult::getTaskFailed);
-        assertEquals("This is task A.", executionSequenceCache.get(0));
-        assertEquals("This is task B.", executionSequenceCache.get(1));
+
+        assertEquals("This is task D.", executionSequenceCache.get(0));
+        assertEquals("This is task E.", executionSequenceCache.get(1));
         assertEquals("This is task C.", executionSequenceCache.get(2));
-        assertEquals("This is task E.", executionSequenceCache.get(3));
-        assertEquals("This is task D.", executionSequenceCache.get(4));
+        assertEquals("This is task B.", executionSequenceCache.get(3));
+        assertEquals("This is task A.", executionSequenceCache.get(4));
+
     }
 
 }

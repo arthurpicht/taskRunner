@@ -60,8 +60,8 @@ public class SkipTest {
         assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskList());
         assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskListSuccess());
         assertThrows(IllegalStateException.class, taskRunnerResult::getTaskFailed);
-        assertEquals("This is task A.", executionSequenceCache.get(0));
-        assertEquals("This is task C.", executionSequenceCache.get(1));
+        assertEquals("This is task C.", executionSequenceCache.get(0));
+        assertEquals("This is task A.", executionSequenceCache.get(1));
     }
 
 }

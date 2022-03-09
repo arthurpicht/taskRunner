@@ -61,6 +61,7 @@ public class TaskRunner {
                 preExecution(task);
                 if (isSkipExecution(task)) {
                     skipExecution(task);
+                    taskRunnerResultBuilder.addTaskSuccess(taskName);
                     continue;
                 }
                 execute(task);

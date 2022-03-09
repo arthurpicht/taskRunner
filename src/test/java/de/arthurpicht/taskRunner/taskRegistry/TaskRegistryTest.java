@@ -2,6 +2,7 @@ package de.arthurpicht.taskRunner.taskRegistry;
 
 import de.arthurpicht.taskRunner.task.Task;
 import de.arthurpicht.taskRunner.task.TaskBuilder;
+import de.arthurpicht.utils.core.strings.Strings;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -93,7 +94,7 @@ public class TaskRegistryTest {
         TaskRegistry taskRegistry = createTaskRegistry();
         List<String> taskList = taskRegistry.getTaskList("A");
 
-        assertEquals(Arrays.asList("A", "B", "C", "E", "D"), taskList);
+        assertEquals(Arrays.asList("D", "E", "C", "B", "A"), taskList);
     }
 
     @Test
@@ -101,7 +102,7 @@ public class TaskRegistryTest {
         TaskRegistry taskRegistry = createTaskRegistry();
         List<String> taskList = taskRegistry.getTaskList("X");
 
-        assertEquals(Arrays.asList("X", "Y", "C", "E", "D"), taskList);
+        assertEquals(Arrays.asList("D", "E", "C", "Y", "X"), taskList);
     }
 
     @Test

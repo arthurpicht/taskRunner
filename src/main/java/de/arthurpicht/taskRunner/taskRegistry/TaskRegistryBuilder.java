@@ -55,9 +55,11 @@ public class TaskRegistryBuilder {
 
     private List<String> forTargetGetTaskOrder(Dag<String> dag, String target) {
         TopologicalSort<String> sort = new TopologicalSort<>(dag, target);
-        List<String> targetOrder = sort.getTopologicalSortedNodesInReversedOrder();
-        Collections.reverse(targetOrder);
-        return targetOrder;
+        return sort.getTopologicalSortedNodesInReversedOrder();
+//        //TODO debug
+//        System.out.println("unreversed: " + Strings.listing(targetOrder, " "));
+//        Collections.reverse(targetOrder);
+//        return targetOrder;
     }
 
     private Set<String> getAllTargets() {

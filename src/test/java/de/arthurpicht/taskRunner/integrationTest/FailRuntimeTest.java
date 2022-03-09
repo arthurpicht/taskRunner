@@ -58,7 +58,7 @@ public class FailRuntimeTest {
         assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskList());
 
         assertEquals(1, taskRunnerResult.getTaskListSuccess().size());
-        assertEquals("A", taskRunnerResult.getTaskListSuccess().get(0));
+        assertEquals("C", taskRunnerResult.getTaskListSuccess().get(0));
         assertEquals("B", taskRunnerResult.getTaskFailed());
 
         assertNotNull(taskRunnerResult.getRuntimeException());
@@ -67,7 +67,7 @@ public class FailRuntimeTest {
         assertNull(taskRunnerResult.getTaskExecutionException());
 
         assertEquals(1, executionSequenceCache.size());
-        assertEquals("This is task A.", executionSequenceCache.get(0));
+        assertEquals("This is task C.", executionSequenceCache.get(0));
     }
 
 }
