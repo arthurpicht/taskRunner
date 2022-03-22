@@ -15,6 +15,7 @@ public class TaskRunner {
     private final SuccessExecuteFunction successExecuteFunction;
     private final SkipExecuteFunction skipExecuteFunction;
     private final FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction;
+    private final FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction;
     private final FailByRuntimeExceptionFunction failByRuntimeExceptionFunction;
 
     public TaskRunner(TaskRegistry taskRegistry) {
@@ -22,6 +23,7 @@ public class TaskRunner {
         this.preExecuteFunction = null;
         this.successExecuteFunction = null;
         this.skipExecuteFunction = null;
+        this.failByTaskPreconditionExceptionFunction = null;
         this.failByTaskExecutionExceptionFunction = null;
         this.failByRuntimeExceptionFunction = null;
     }
@@ -31,6 +33,7 @@ public class TaskRunner {
             PreExecuteFunction preExecuteFunction,
             SuccessExecuteFunction successExecuteFunction,
             SkipExecuteFunction skipExecuteFunction,
+            FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction,
             FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction,
             FailByRuntimeExceptionFunction failByRuntimeExceptionFunction) {
 
@@ -38,6 +41,7 @@ public class TaskRunner {
         this.preExecuteFunction = preExecuteFunction;
         this.successExecuteFunction = successExecuteFunction;
         this.skipExecuteFunction = skipExecuteFunction;
+        this.failByTaskPreconditionExceptionFunction = failByTaskPreconditionExceptionFunction;
         this.failByTaskExecutionExceptionFunction = failByTaskExecutionExceptionFunction;
         this.failByRuntimeExceptionFunction = failByRuntimeExceptionFunction;
     }
@@ -59,6 +63,7 @@ public class TaskRunner {
             Task task = this.taskRegistry.getTask(taskName);
             try {
                 preExecution(task);
+                checkPrecondition(task);
                 if (isSkipExecution(task)) {
                     skipExecution(task);
                     taskRunnerResultBuilder.addTaskSuccess(taskName);
@@ -67,6 +72,13 @@ public class TaskRunner {
                 execute(task);
                 postExecution(task);
                 taskRunnerResultBuilder.addTaskSuccess(taskName);
+            } catch (TaskPreconditionException e) {
+                failByTaskPreconditionExceptionExecution(task, e);
+                taskRunnerResultBuilder.withTaskPreconditionException(e);
+                taskRunnerResultBuilder.withTaskFailed(taskName);
+                taskRunnerResultBuilder.withFail();
+                taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
+                return taskRunnerResultBuilder.build();
             } catch (TaskExecutionException e) {
                 failByTaskExecutionExceptionExecution(task, e);
                 taskRunnerResultBuilder.withTaskExecutionException(e);
@@ -87,6 +99,13 @@ public class TaskRunner {
         taskRunnerResultBuilder.withSuccess();
         taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
         return taskRunnerResultBuilder.build();
+    }
+
+    private void checkPrecondition(Task task) throws TaskPreconditionException {
+        if (task.hasPreconditionFunction()) {
+            TaskPreconditionFunction taskPreconditionFunction = task.precondition();
+            taskPreconditionFunction.execute();
+        }
     }
 
     private void execute(Task task) throws TaskExecutionException {
@@ -130,6 +149,16 @@ public class TaskRunner {
         if (this.successExecuteFunction == null) return;
         this.successExecuteFunction.onSuccessExecute(task);
     }
+
+    private void failByTaskPreconditionExceptionExecution(Task task, TaskPreconditionException taskPreconditioinException) {
+        if (this.failByTaskPreconditionExceptionFunction == null) return;
+        try {
+            this.failByTaskPreconditionExceptionFunction.onFail(task, taskPreconditioinException);
+        } catch (RuntimeException e) {
+            // TODO log
+        }
+    }
+
 
     private void failByTaskExecutionExceptionExecution(Task task, TaskExecutionException taskExecutionException) {
         if (this.failByTaskExecutionExceptionFunction == null) return;

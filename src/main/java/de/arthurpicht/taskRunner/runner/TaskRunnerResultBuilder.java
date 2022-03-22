@@ -1,6 +1,7 @@
 package de.arthurpicht.taskRunner.runner;
 
 import de.arthurpicht.taskRunner.task.TaskExecutionException;
+import de.arthurpicht.taskRunner.task.TaskPreconditionException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class TaskRunnerResultBuilder {
     private List<String> taskList;
     private final List<String> taskListSuccess;
     private String taskFailed;
+    private TaskPreconditionException taskPreconditionException;
     private TaskExecutionException taskExecutionException;
     private RuntimeException runtimeException;
     private LocalDateTime timestampStart;
@@ -50,6 +52,11 @@ public class TaskRunnerResultBuilder {
         return this;
     }
 
+    public TaskRunnerResultBuilder withTaskPreconditionException(TaskPreconditionException taskPreconditionException) {
+        this.taskPreconditionException = taskPreconditionException;
+        return this;
+    }
+
     public TaskRunnerResultBuilder withTaskExecutionException(TaskExecutionException taskExecutionException) {
         this.taskExecutionException = taskExecutionException;
         return this;
@@ -83,6 +90,7 @@ public class TaskRunnerResultBuilder {
                 this.timestampStart,
                 this.timestampFinish,
                 duration,
+                this.taskPreconditionException,
                 this.taskExecutionException,
                 this.runtimeException
         );

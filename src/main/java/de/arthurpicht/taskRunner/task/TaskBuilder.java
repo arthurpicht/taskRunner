@@ -10,6 +10,7 @@ public class TaskBuilder {
     private String description;
     private boolean isTarget;
     private Set<String> dependencies;
+    private TaskPreconditionFunction taskPrecondition;
     private InputChangedFunction inputChanged;
     private OutputExistsFunction outputExists;
     private TaskExecutionFunction taskExecution;
@@ -19,6 +20,7 @@ public class TaskBuilder {
         this.description = "";
         this.isTarget = false;
         this.dependencies = new LinkedHashSet<>();
+        this.taskPrecondition = null;
         this.inputChanged = null;
         this.outputExists = null;
         this.taskExecution = null;
@@ -41,6 +43,11 @@ public class TaskBuilder {
 
     public TaskBuilder dependencies(String... dependencies) {
         this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
+        return this;
+    }
+
+    public TaskBuilder precondition(TaskPreconditionFunction taskPrecondition) {
+        this.taskPrecondition = taskPrecondition;
         return this;
     }
 
@@ -69,6 +76,7 @@ public class TaskBuilder {
                 this.description,
                 this.isTarget,
                 this.dependencies,
+                this.taskPrecondition,
                 this.inputChanged,
                 this.outputExists,
                 this.taskExecution);

@@ -12,11 +12,21 @@ public interface Task {
 
     public Set<String> getDependencies();
 
-    public boolean hasInputChangedFunction();
+    default public boolean hasPreconditionFunction() {
+        return this.precondition() != null;
+    }
+
+    public TaskPreconditionFunction precondition();
+
+    default public boolean hasInputChangedFunction() {
+        return this.inputChanged() != null;
+    }
 
     public InputChangedFunction inputChanged();
 
-    public boolean hasOutputExistsFunction();
+    default public boolean hasOutputExistsFunction() {
+        return this.outputExists() != null;
+    }
 
     public OutputExistsFunction outputExists();
 

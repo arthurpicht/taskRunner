@@ -11,6 +11,7 @@ public class TaskRunnerBuilder {
     private SuccessExecuteFunction successExecuteFunction;
     private SkipExecuteFunction skipExecuteFunction;
     private FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction;
+    private FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction;
     private FailByRuntimeExceptionFunction failByRuntimeExceptionFunction;
 
     public TaskRunnerBuilder() {
@@ -19,6 +20,7 @@ public class TaskRunnerBuilder {
         this.successExecuteFunction = null;
         this.skipExecuteFunction = null;
         this.failByTaskExecutionExceptionFunction = null;
+        this.failByTaskPreconditionExceptionFunction = null;
         this.failByRuntimeExceptionFunction = null;
     }
 
@@ -52,6 +54,11 @@ public class TaskRunnerBuilder {
         return this;
     }
 
+    public TaskRunnerBuilder withFailByTaskPreconditionException(FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction) {
+        this.failByTaskPreconditionExceptionFunction = failByTaskPreconditionExceptionFunction;
+        return this;
+    }
+
     public TaskRunnerBuilder withFailByRuntimeException(FailByRuntimeExceptionFunction failByRuntimeExceptionFunction) {
         this.failByRuntimeExceptionFunction = failByRuntimeExceptionFunction;
         return this;
@@ -66,6 +73,7 @@ public class TaskRunnerBuilder {
                 this.preExecuteFunction,
                 this.successExecuteFunction,
                 this.skipExecuteFunction,
+                this.failByTaskPreconditionExceptionFunction,
                 this.failByTaskExecutionExceptionFunction,
                 this.failByRuntimeExceptionFunction
         );

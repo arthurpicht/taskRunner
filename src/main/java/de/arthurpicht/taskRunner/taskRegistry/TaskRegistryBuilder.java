@@ -18,12 +18,12 @@ public class TaskRegistryBuilder {
 
     public TaskRegistryBuilder withTask(Task task) {
         assertTaskNotPreexisting(task);
-        assertDependenciesArePreexisting(task);
         this.taskMap.put(task.getName(), task);
         return this;
     }
 
     public TaskRegistry build() {
+        validateDependencyStructure();
         Dag<String> taskDag = createTaskDag();
         validate(taskDag);
         Map<String, List<String>> targetToTaskListMap = createOrderedTaskLists(taskDag);
@@ -33,6 +33,14 @@ public class TaskRegistryBuilder {
     private void assertTaskNotPreexisting(Task task) {
         if (this.taskMap.containsKey(task.getName()))
             throw new TaskDefinitionException("Task already registered [" + task.getName() + "].");
+    }
+
+    private void validateDependencyStructure() {
+        Set<String> taskNames = this.taskMap.keySet();
+        for (String taskName : taskNames) {
+            Task task = this.taskMap.get(taskName);
+            assertDependenciesArePreexisting(task);
+        }
     }
 
     private void assertDependenciesArePreexisting(Task task) {
@@ -56,10 +64,6 @@ public class TaskRegistryBuilder {
     private List<String> forTargetGetTaskOrder(Dag<String> dag, String target) {
         TopologicalSort<String> sort = new TopologicalSort<>(dag, target);
         return sort.getTopologicalSortedNodesInReversedOrder();
-//        //TODO debug
-//        System.out.println("unreversed: " + Strings.listing(targetOrder, " "));
-//        Collections.reverse(targetOrder);
-//        return targetOrder;
     }
 
     private Set<String> getAllTargets() {
@@ -74,7 +78,6 @@ public class TaskRegistryBuilder {
             AcyclicValidator.validate(dag);
         } catch (DagCycleException e) {
             List<String> taskNameCycleList = e.getCycleNodeList();
-            Collections.reverse(taskNameCycleList);
             throw new TaskDefinitionException("Cycle found in task definition: "
                     + Strings.listing(taskNameCycleList, ", ", "{", "}", "[", "]"));
         }
@@ -84,6 +87,8 @@ public class TaskRegistryBuilder {
         DagBuilder<String> dagBuilder = new DagBuilder<>();
         for (String taskName : this.taskMap.keySet()) {
             dagBuilder.withNode(taskName);
+        }
+        for (String taskName : this.taskMap.keySet()) {
             Task task = this.taskMap.get(taskName);
             for (String dependencyTask : task.getDependencies()) {
                 dagBuilder.withEdge(taskName, dependencyTask);

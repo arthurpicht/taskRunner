@@ -13,6 +13,7 @@ public class BasicTask implements Task {
     private final String description;
     private final boolean isTarget;
     private final Set<String> dependencies;
+    private final TaskPreconditionFunction taskPrecondition;
     private final InputChangedFunction inputChanged;
     private final OutputExistsFunction outputExists;
     private final TaskExecutionFunction taskExecution;
@@ -22,6 +23,7 @@ public class BasicTask implements Task {
             String description,
             boolean isTarget,
             Set<String> dependencies,
+            TaskPreconditionFunction taskPrecondition,
             InputChangedFunction inputChanged,
             OutputExistsFunction outputExists,
             TaskExecutionFunction taskExecution) {
@@ -29,10 +31,11 @@ public class BasicTask implements Task {
         assertArgumentNotNull("taskExecution", taskExecution);
         this.name = name;
         this.description = description;
-        this.inputChanged = inputChanged;
-        this.outputExists = outputExists;
         this.isTarget = isTarget;
         this.dependencies = Collections.unmodifiableSet(dependencies);
+        this.taskPrecondition = taskPrecondition;
+        this.inputChanged = inputChanged;
+        this.outputExists = outputExists;
         this.taskExecution = taskExecution;
     }
 
@@ -57,18 +60,13 @@ public class BasicTask implements Task {
     }
 
     @Override
-    public boolean hasInputChangedFunction() {
-        return this.inputChanged != null;
+    public TaskPreconditionFunction precondition() {
+        return this.taskPrecondition;
     }
 
     @Override
     public InputChangedFunction inputChanged() {
         return this.inputChanged;
-    }
-
-    @Override
-    public boolean hasOutputExistsFunction() {
-        return this.outputExists != null;
     }
 
     @Override
