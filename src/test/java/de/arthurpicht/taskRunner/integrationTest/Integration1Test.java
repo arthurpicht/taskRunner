@@ -1,10 +1,12 @@
 package de.arthurpicht.taskRunner.integrationTest;
 
 import de.arthurpicht.taskRunner.TaskRunner;
+import de.arthurpicht.taskRunner.runner.TaskRunnerBuilder;
 import de.arthurpicht.taskRunner.runner.TaskRunnerResult;
 import de.arthurpicht.taskRunner.task.TaskBuilder;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistry;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistryBuilder;
+import de.arthurpicht.utils.core.collection.Lists;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class Integration1Test {
 
-    private static final List<String> executionSequenceCache = new ArrayList<>();
+    private static List<String> executionSequenceCache = new ArrayList<>();
 
     private TaskRegistry createTaskRegistry() {
 
@@ -74,6 +76,8 @@ public class Integration1Test {
 
     @Test
     void demoSimple() {
+        executionSequenceCache = new ArrayList<>();
+
         TaskRegistry taskRegistry = createTaskRegistry();
         TaskRunner taskRunner = new TaskRunner(taskRegistry);
         TaskRunnerResult taskRunnerResult = taskRunner.run("A");
@@ -89,7 +93,41 @@ public class Integration1Test {
         assertEquals("This is task C.", executionSequenceCache.get(2));
         assertEquals("This is task B.", executionSequenceCache.get(3));
         assertEquals("This is task A.", executionSequenceCache.get(4));
+    }
 
+    @Test
+    void demoCallbackSequence() {
+        executionSequenceCache = new ArrayList<>();
+
+        TaskRunner taskRunner = new TaskRunnerBuilder()
+                .withTaskRegistry(createTaskRegistry())
+                .withOnPreExecuteCallback(task -> executionSequenceCache.add("pre: " + task.getName()))
+                .withOnSuccessCallback(task -> executionSequenceCache.add("success: " + task.getName()))
+                .build();
+        TaskRunnerResult taskRunnerResult = taskRunner.run("A");
+
+        assertTrue(taskRunnerResult.isSuccess());
+        assertEquals("A", taskRunnerResult.getTarget());
+
+        List<String> expectedSequence = Lists.newArrayList(
+                "pre: D",
+                "This is task D.",
+                "success: D",
+                "pre: E",
+                "This is task E.",
+                "success: E",
+                "pre: C",
+                "This is task C.",
+                "success: C",
+                "pre: B",
+                "This is task B.",
+                "success: B",
+                "pre: A",
+                "This is task A.",
+                "success: A"
+        );
+
+        assertEquals(expectedSequence, executionSequenceCache);
     }
 
 }

@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SkipTest {
+public class UpToDateTest {
 
     private static final List<String> executionSequenceCache = new ArrayList<>();
 
@@ -31,7 +31,8 @@ public class SkipTest {
                 .name("B")
                 .description("task B")
                 .dependencies("C")
-                .skip(() -> true)
+                .inputChanged(() -> false)
+                .outputExists(() -> true)
                 .execute(() -> executionSequenceCache.add("This is task B."))
                 .build());
 
@@ -47,7 +48,7 @@ public class SkipTest {
     }
 
     @Test
-    void demoSkip() {
+    void demoUpToDate() {
         TaskRegistry taskRegistry = createTaskRegistry();
         TaskRunner taskRunner = new TaskRunner(taskRegistry);
         TaskRunnerResult taskRunnerResult = taskRunner.run("A");

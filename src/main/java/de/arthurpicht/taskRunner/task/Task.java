@@ -12,6 +12,12 @@ public interface Task {
 
     public Set<String> getDependencies();
 
+    default public boolean hasSkipFunction() {
+        return this.skip() != null;
+    }
+
+    public TaskSkipFunction skip();
+
     default public boolean hasPreconditionFunction() {
         return this.precondition() != null;
     }

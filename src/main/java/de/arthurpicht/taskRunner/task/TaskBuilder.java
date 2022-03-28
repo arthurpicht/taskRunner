@@ -10,6 +10,7 @@ public class TaskBuilder {
     private String description;
     private boolean isTarget;
     private Set<String> dependencies;
+    private TaskSkipFunction taskSkipFunction;
     private TaskPreconditionFunction taskPrecondition;
     private InputChangedFunction inputChanged;
     private OutputExistsFunction outputExists;
@@ -20,6 +21,7 @@ public class TaskBuilder {
         this.description = "";
         this.isTarget = false;
         this.dependencies = new LinkedHashSet<>();
+        this.taskSkipFunction = null;
         this.taskPrecondition = null;
         this.inputChanged = null;
         this.outputExists = null;
@@ -46,6 +48,11 @@ public class TaskBuilder {
         return this;
     }
 
+    public TaskBuilder skip(TaskSkipFunction taskSkipFunction) {
+        this.taskSkipFunction = taskSkipFunction;
+        return this;
+    }
+
     public TaskBuilder precondition(TaskPreconditionFunction taskPrecondition) {
         this.taskPrecondition = taskPrecondition;
         return this;
@@ -66,6 +73,12 @@ public class TaskBuilder {
         return this;
     }
 
+    public TaskBuilder isUpToDate(OutputExistsFunction outputExists) {
+        this.inputChanged = () -> false;
+        this.outputExists = outputExists;
+        return this;
+    }
+
     public BasicTask build() {
         if (this.name.equals(""))
             throw new TaskDefinitionException("No name specified for task.");
@@ -76,6 +89,7 @@ public class TaskBuilder {
                 this.description,
                 this.isTarget,
                 this.dependencies,
+                this.taskSkipFunction,
                 this.taskPrecondition,
                 this.inputChanged,
                 this.outputExists,

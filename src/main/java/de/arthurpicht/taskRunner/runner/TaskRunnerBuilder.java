@@ -3,25 +3,30 @@ package de.arthurpicht.taskRunner.runner;
 import de.arthurpicht.taskRunner.TaskRunner;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistry;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistryBuilder;
+import org.slf4j.Logger;
 
 public class TaskRunnerBuilder {
 
     private TaskRegistry taskRegistry;
-    private PreExecuteFunction preExecuteFunction;
-    private SuccessExecuteFunction successExecuteFunction;
-    private SkipExecuteFunction skipExecuteFunction;
-    private FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction;
-    private FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction;
-    private FailByRuntimeExceptionFunction failByRuntimeExceptionFunction;
+    private OnPreExecuteCallback onPreExecuteCallback;
+    private OnSuccessCallback onSuccessCallback;
+    private OnSkipCallback onSkipCallback;
+    private OnUpToDateCallback onUpToDateCallback;
+    private OnFailByTaskExecutionExceptionCallback onFailByTaskExecutionExceptionCallback;
+    private OnFailByTaskPreconditionExceptionCallback onFailByTaskPreconditionExceptionCallback;
+    private OnFailByRuntimeExceptionFunctionCallback onFailByRuntimeExceptionFunctionCallback;
+    private Logger logger;
 
     public TaskRunnerBuilder() {
         this.taskRegistry = null;
-        this.preExecuteFunction = null;
-        this.successExecuteFunction = null;
-        this.skipExecuteFunction = null;
-        this.failByTaskExecutionExceptionFunction = null;
-        this.failByTaskPreconditionExceptionFunction = null;
-        this.failByRuntimeExceptionFunction = null;
+        this.onPreExecuteCallback = null;
+        this.onSuccessCallback = null;
+        this.onSkipCallback = null;
+        this.onUpToDateCallback = null;
+        this.onFailByTaskExecutionExceptionCallback = null;
+        this.onFailByTaskPreconditionExceptionCallback = null;
+        this.onFailByRuntimeExceptionFunctionCallback = null;
+        this.logger = null;
     }
 
     public TaskRunnerBuilder withTaskRegistry(TaskRegistry taskRegistry) {
@@ -34,33 +39,43 @@ public class TaskRunnerBuilder {
         return this;
     }
 
-    public TaskRunnerBuilder withPreExecution(PreExecuteFunction preExecuteFunction) {
-        this.preExecuteFunction = preExecuteFunction;
+    public TaskRunnerBuilder withOnPreExecuteCallback(OnPreExecuteCallback onPreExecuteCallback) {
+        this.onPreExecuteCallback = onPreExecuteCallback;
         return this;
     }
 
-    public TaskRunnerBuilder withSuccessExecution(SuccessExecuteFunction successExecuteFunction) {
-        this.successExecuteFunction = successExecuteFunction;
+    public TaskRunnerBuilder withOnSuccessCallback(OnSuccessCallback onSuccessCallback) {
+        this.onSuccessCallback = onSuccessCallback;
         return this;
     }
 
-    public TaskRunnerBuilder withSkipExecution(SkipExecuteFunction skipExecutionFunction) {
-        this.skipExecuteFunction = skipExecutionFunction;
+    public TaskRunnerBuilder withOnSkipCallback(OnSkipCallback skipExecutionFunction) {
+        this.onSkipCallback = skipExecutionFunction;
         return this;
     }
 
-    public TaskRunnerBuilder withFailByTaskExecutionException(FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction) {
-        this.failByTaskExecutionExceptionFunction = failByTaskExecutionExceptionFunction;
+    public TaskRunnerBuilder withOnUpToDateCallback(OnUpToDateCallback onUpToDateCallback) {
+        this.onUpToDateCallback = onUpToDateCallback;
         return this;
     }
 
-    public TaskRunnerBuilder withFailByTaskPreconditionException(FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction) {
-        this.failByTaskPreconditionExceptionFunction = failByTaskPreconditionExceptionFunction;
+    public TaskRunnerBuilder withOnFailByTaskExecutionExceptionCallback(OnFailByTaskExecutionExceptionCallback onFailByTaskExecutionExceptionCallback) {
+        this.onFailByTaskExecutionExceptionCallback = onFailByTaskExecutionExceptionCallback;
         return this;
     }
 
-    public TaskRunnerBuilder withFailByRuntimeException(FailByRuntimeExceptionFunction failByRuntimeExceptionFunction) {
-        this.failByRuntimeExceptionFunction = failByRuntimeExceptionFunction;
+    public TaskRunnerBuilder withOnFailByTaskPreconditionExceptionCallback(OnFailByTaskPreconditionExceptionCallback onFailByTaskPreconditionExceptionCallback) {
+        this.onFailByTaskPreconditionExceptionCallback = onFailByTaskPreconditionExceptionCallback;
+        return this;
+    }
+
+    public TaskRunnerBuilder withOnFailByRuntimeExceptionCallback(OnFailByRuntimeExceptionFunctionCallback onFailByRuntimeExceptionFunctionCallback) {
+        this.onFailByRuntimeExceptionFunctionCallback = onFailByRuntimeExceptionFunctionCallback;
+        return this;
+    }
+
+    public TaskRunnerBuilder withLogger(Logger logger) {
+        this.logger = logger;
         return this;
     }
 
@@ -70,12 +85,14 @@ public class TaskRunnerBuilder {
                     + ". No " + TaskRegistry.class.getSimpleName() + " specified.");
         return new TaskRunner(
                 this.taskRegistry,
-                this.preExecuteFunction,
-                this.successExecuteFunction,
-                this.skipExecuteFunction,
-                this.failByTaskPreconditionExceptionFunction,
-                this.failByTaskExecutionExceptionFunction,
-                this.failByRuntimeExceptionFunction
+                this.onPreExecuteCallback,
+                this.onSuccessCallback,
+                this.onSkipCallback,
+                this.onUpToDateCallback,
+                this.onFailByTaskPreconditionExceptionCallback,
+                this.onFailByTaskExecutionExceptionCallback,
+                this.onFailByRuntimeExceptionFunctionCallback,
+                this.logger
         );
     }
 

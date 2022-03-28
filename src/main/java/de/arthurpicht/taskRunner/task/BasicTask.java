@@ -13,6 +13,7 @@ public class BasicTask implements Task {
     private final String description;
     private final boolean isTarget;
     private final Set<String> dependencies;
+    private final TaskSkipFunction taskSkipFunction;
     private final TaskPreconditionFunction taskPrecondition;
     private final InputChangedFunction inputChanged;
     private final OutputExistsFunction outputExists;
@@ -23,6 +24,7 @@ public class BasicTask implements Task {
             String description,
             boolean isTarget,
             Set<String> dependencies,
+            TaskSkipFunction taskSkipFunction,
             TaskPreconditionFunction taskPrecondition,
             InputChangedFunction inputChanged,
             OutputExistsFunction outputExists,
@@ -33,6 +35,7 @@ public class BasicTask implements Task {
         this.description = description;
         this.isTarget = isTarget;
         this.dependencies = Collections.unmodifiableSet(dependencies);
+        this.taskSkipFunction = taskSkipFunction;
         this.taskPrecondition = taskPrecondition;
         this.inputChanged = inputChanged;
         this.outputExists = outputExists;
@@ -57,6 +60,11 @@ public class BasicTask implements Task {
     @Override
     public Set<String> getDependencies() {
         return this.dependencies;
+    }
+
+    @Override
+    public TaskSkipFunction skip() {
+        return this.taskSkipFunction;
     }
 
     @Override

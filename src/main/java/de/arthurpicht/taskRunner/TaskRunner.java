@@ -3,6 +3,7 @@ package de.arthurpicht.taskRunner;
 import de.arthurpicht.taskRunner.runner.*;
 import de.arthurpicht.taskRunner.task.*;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistry;
+import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,39 +12,47 @@ import java.util.Set;
 public class TaskRunner {
 
     private final TaskRegistry taskRegistry;
-    private final PreExecuteFunction preExecuteFunction;
-    private final SuccessExecuteFunction successExecuteFunction;
-    private final SkipExecuteFunction skipExecuteFunction;
-    private final FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction;
-    private final FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction;
-    private final FailByRuntimeExceptionFunction failByRuntimeExceptionFunction;
+    private final OnPreExecuteCallback onPreExecuteCallback;
+    private final OnSuccessCallback onSuccessCallback;
+    private final OnSkipCallback onSkipCallback;
+    private final OnUpToDateCallback onUpToDateCallback;
+    private final OnFailByTaskExecutionExceptionCallback onFailByTaskExecutionExceptionCallback;
+    private final OnFailByTaskPreconditionExceptionCallback onFailByTaskPreconditionExceptionCallback;
+    private final OnFailByRuntimeExceptionFunctionCallback onFailByRuntimeExceptionFunctionCallback;
+    private final Logger logger;
 
     public TaskRunner(TaskRegistry taskRegistry) {
         this.taskRegistry = taskRegistry;
-        this.preExecuteFunction = null;
-        this.successExecuteFunction = null;
-        this.skipExecuteFunction = null;
-        this.failByTaskPreconditionExceptionFunction = null;
-        this.failByTaskExecutionExceptionFunction = null;
-        this.failByRuntimeExceptionFunction = null;
+        this.onPreExecuteCallback = null;
+        this.onSuccessCallback = null;
+        this.onSkipCallback = null;
+        this.onUpToDateCallback = null;
+        this.onFailByTaskPreconditionExceptionCallback = null;
+        this.onFailByTaskExecutionExceptionCallback = null;
+        this.onFailByRuntimeExceptionFunctionCallback = null;
+        this.logger = null;
     }
 
     public TaskRunner(
             TaskRegistry taskRegistry,
-            PreExecuteFunction preExecuteFunction,
-            SuccessExecuteFunction successExecuteFunction,
-            SkipExecuteFunction skipExecuteFunction,
-            FailByTaskPreconditionExceptionFunction failByTaskPreconditionExceptionFunction,
-            FailByTaskExecutionExceptionFunction failByTaskExecutionExceptionFunction,
-            FailByRuntimeExceptionFunction failByRuntimeExceptionFunction) {
+            OnPreExecuteCallback onPreExecuteCallback,
+            OnSuccessCallback onSuccessCallback,
+            OnSkipCallback onSkipCallback,
+            OnUpToDateCallback onUpToDateCallback,
+            OnFailByTaskPreconditionExceptionCallback onFailByTaskPreconditionExceptionCallback,
+            OnFailByTaskExecutionExceptionCallback onFailByTaskExecutionExceptionCallback,
+            OnFailByRuntimeExceptionFunctionCallback onFailByRuntimeExceptionFunctionCallback,
+            Logger logger) {
 
         this.taskRegistry = taskRegistry;
-        this.preExecuteFunction = preExecuteFunction;
-        this.successExecuteFunction = successExecuteFunction;
-        this.skipExecuteFunction = skipExecuteFunction;
-        this.failByTaskPreconditionExceptionFunction = failByTaskPreconditionExceptionFunction;
-        this.failByTaskExecutionExceptionFunction = failByTaskExecutionExceptionFunction;
-        this.failByRuntimeExceptionFunction = failByRuntimeExceptionFunction;
+        this.onPreExecuteCallback = onPreExecuteCallback;
+        this.onSuccessCallback = onSuccessCallback;
+        this.onSkipCallback = onSkipCallback;
+        this.onUpToDateCallback = onUpToDateCallback;
+        this.onFailByTaskPreconditionExceptionCallback = onFailByTaskPreconditionExceptionCallback;
+        this.onFailByTaskExecutionExceptionCallback = onFailByTaskExecutionExceptionCallback;
+        this.onFailByRuntimeExceptionFunctionCallback = onFailByRuntimeExceptionFunctionCallback;
+        this.logger = logger;
     }
 
     public Set<String> getTargets() {
@@ -61,44 +70,81 @@ public class TaskRunner {
 
         for (String taskName : taskList) {
             Task task = this.taskRegistry.getTask(taskName);
+
+            executeHandlerPreExecution(task);
+
             try {
-                preExecution(task);
-                checkPrecondition(task);
-                if (isSkipExecution(task)) {
-                    skipExecution(task);
+                if (skip(task)) {
+                    executeHandlerOnSkip(task);
                     taskRunnerResultBuilder.addTaskSuccess(taskName);
                     continue;
                 }
-                execute(task);
-                postExecution(task);
-                taskRunnerResultBuilder.addTaskSuccess(taskName);
-            } catch (TaskPreconditionException e) {
-                failByTaskPreconditionExceptionExecution(task, e);
-                taskRunnerResultBuilder.withTaskPreconditionException(e);
-                taskRunnerResultBuilder.withTaskFailed(taskName);
-                taskRunnerResultBuilder.withFail();
-                taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
-                return taskRunnerResultBuilder.build();
-            } catch (TaskExecutionException e) {
-                failByTaskExecutionExceptionExecution(task, e);
-                taskRunnerResultBuilder.withTaskExecutionException(e);
-                taskRunnerResultBuilder.withTaskFailed(taskName);
-                taskRunnerResultBuilder.withFail();
-                taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
-                return taskRunnerResultBuilder.build();
             } catch (RuntimeException e) {
-                failByRuntimeExceptionExecution(task, e);
-                taskRunnerResultBuilder.withRuntimeException(e);
-                taskRunnerResultBuilder.withTaskFailed(taskName);
-                taskRunnerResultBuilder.withFail();
-                taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
-                return taskRunnerResultBuilder.build();
+                executeHandlerFailByRuntimeException(task, e);
+                return completeResultWithRuntimeException(taskRunnerResultBuilder, taskName, e).build();
+            }
+
+            try {
+                checkPrecondition(task);
+            } catch (TaskPreconditionException e) {
+                executeHandlerFailByTaskPreconditionException(task, e);
+                return completeResultWithTaskPreconditionException(taskRunnerResultBuilder, taskName, e).build();
+            } catch (RuntimeException e) {
+                executeHandlerFailByRuntimeException(task, e);
+                return completeResultWithRuntimeException(taskRunnerResultBuilder, taskName, e).build();
+            }
+
+            try {
+                if (isUpToDate(task)) {
+                    executeHandlerOnUpToDateExecution(task);
+                    taskRunnerResultBuilder.addTaskSuccess(taskName);
+                    continue;
+                }
+            } catch (RuntimeException e) {
+                executeHandlerFailByRuntimeException(task, e);
+                return completeResultWithRuntimeException(taskRunnerResultBuilder, taskName, e).build();
+            }
+
+            try {
+                execute(task);
+                executeHandlerPostExecution(task);
+                taskRunnerResultBuilder.addTaskSuccess(taskName);
+            } catch (TaskExecutionException e) {
+                executeHandlerFailByTaskExecutionException(task, e);
+                return completeResultWithTaskExecutionException(taskRunnerResultBuilder, taskName, e).build();
+            } catch (RuntimeException e) {
+                executeHandlerFailByRuntimeException(task, e);
+                return completeResultWithRuntimeException(taskRunnerResultBuilder, taskName, e).build();
             }
         }
 
         taskRunnerResultBuilder.withSuccess();
         taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
         return taskRunnerResultBuilder.build();
+    }
+
+    private TaskRunnerResultBuilder completeResultWithTaskExecutionException(TaskRunnerResultBuilder taskRunnerResultBuilder, String taskName, TaskExecutionException e) {
+        taskRunnerResultBuilder.withFail();
+        taskRunnerResultBuilder.withTaskFailed(taskName);
+        taskRunnerResultBuilder.withTaskExecutionException(e);
+        taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
+        return taskRunnerResultBuilder;
+    }
+
+    private TaskRunnerResultBuilder completeResultWithTaskPreconditionException(TaskRunnerResultBuilder taskRunnerResultBuilder, String taskName, TaskPreconditionException e) {
+        taskRunnerResultBuilder.withFail();
+        taskRunnerResultBuilder.withTaskFailed(taskName);
+        taskRunnerResultBuilder.withTaskPreconditionException(e);
+        taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
+        return taskRunnerResultBuilder;
+    }
+
+    private TaskRunnerResultBuilder completeResultWithRuntimeException(TaskRunnerResultBuilder taskRunnerResultBuilder, String taskName, RuntimeException e) {
+        taskRunnerResultBuilder.withFail();
+        taskRunnerResultBuilder.withTaskFailed(taskName);
+        taskRunnerResultBuilder.withRuntimeException(e);
+        taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
+        return taskRunnerResultBuilder;
     }
 
     private void checkPrecondition(Task task) throws TaskPreconditionException {
@@ -113,7 +159,7 @@ public class TaskRunner {
         taskExecutionFunction.execute();
     }
 
-    private boolean isSkipExecution(Task task) {
+    private boolean isUpToDate(Task task) {
         return !inputChanged(task) && outputExists(task);
     }
 
@@ -135,48 +181,69 @@ public class TaskRunner {
         }
     }
 
-    private void skipExecution(Task task) {
-        if (this.skipExecuteFunction == null) return;
-        this.skipExecuteFunction.onSkipExecute(task);
-    }
-
-    private void preExecution(Task task) {
-        if (this.preExecuteFunction == null) return;
-        this.preExecuteFunction.onPreExecute(task);
-    }
-
-    private void postExecution(Task task) {
-        if (this.successExecuteFunction == null) return;
-        this.successExecuteFunction.onSuccessExecute(task);
-    }
-
-    private void failByTaskPreconditionExceptionExecution(Task task, TaskPreconditionException taskPreconditioinException) {
-        if (this.failByTaskPreconditionExceptionFunction == null) return;
-        try {
-            this.failByTaskPreconditionExceptionFunction.onFail(task, taskPreconditioinException);
-        } catch (RuntimeException e) {
-            // TODO log
+    private boolean skip(Task task) {
+        if (task.hasSkipFunction()) {
+            TaskSkipFunction taskSkipFunction = task.skip();
+            return taskSkipFunction.skip();
+        } else {
+            return false;
         }
     }
 
+    private void executeHandlerOnSkip(Task task) {
+        if (this.onSkipCallback == null) return;
+        this.onSkipCallback.onSkipExecute(task);
+    }
 
-    private void failByTaskExecutionExceptionExecution(Task task, TaskExecutionException taskExecutionException) {
-        if (this.failByTaskExecutionExceptionFunction == null) return;
+    private void executeHandlerOnUpToDateExecution(Task task) {
+        if (this.onUpToDateCallback == null) return;
+        this.onUpToDateCallback.onUpToDateExecute(task);
+    }
+
+    private void executeHandlerPreExecution(Task task) {
+        if (this.onPreExecuteCallback == null) return;
+        this.onPreExecuteCallback.onPreExecute(task);
+    }
+
+    private void executeHandlerPostExecution(Task task) {
+        if (this.onSuccessCallback == null) return;
+        this.onSuccessCallback.onSuccess(task);
+    }
+
+    private void executeHandlerFailByTaskPreconditionException(Task task, TaskPreconditionException taskPreconditionException) {
+        if (this.onFailByTaskPreconditionExceptionCallback == null) return;
         try {
-            this.failByTaskExecutionExceptionFunction.onFail(task, taskExecutionException);
+            this.onFailByTaskPreconditionExceptionCallback.onFail(task, taskPreconditionException);
         } catch (RuntimeException e) {
-            // TODO log
+            if (this.logger != null) {
+                this.logger.error("RuntimeException occurred when calling "
+                        + OnFailByTaskPreconditionExceptionCallback.class.getSimpleName() + ": ", e);
+            }
         }
     }
 
-    private void failByRuntimeExceptionExecution(Task task, RuntimeException runtimeException) {
-        if (this.failByRuntimeExceptionFunction == null) return;
+    private void executeHandlerFailByTaskExecutionException(Task task, TaskExecutionException taskExecutionException) {
+        if (this.onFailByTaskExecutionExceptionCallback == null) return;
         try {
-            this.failByRuntimeExceptionFunction.onFail(task, runtimeException);
+            this.onFailByTaskExecutionExceptionCallback.onFail(task, taskExecutionException);
         } catch (RuntimeException e) {
-            // TODO log
+            if (this.logger != null) {
+                this.logger.error("RuntimeException occurred when calling "
+                        + OnFailByTaskExecutionExceptionCallback.class.getSimpleName() + ": ", e);
+            }
         }
     }
 
+    private void executeHandlerFailByRuntimeException(Task task, RuntimeException runtimeException) {
+        if (this.onFailByRuntimeExceptionFunctionCallback == null) return;
+        try {
+            this.onFailByRuntimeExceptionFunctionCallback.onFail(task, runtimeException);
+        } catch (RuntimeException e) {
+            if (this.logger != null) {
+                this.logger.error("RuntimeException occurred when calling "
+                        + OnFailByRuntimeExceptionFunctionCallback.class.getSimpleName() + ": ", e);
+            }
+        }
+    }
 
 }
