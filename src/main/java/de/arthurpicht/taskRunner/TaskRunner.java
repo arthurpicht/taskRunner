@@ -6,6 +6,8 @@ import de.arthurpicht.taskRunner.taskRegistry.TaskRegistry;
 import org.slf4j.Logger;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -121,6 +123,16 @@ public class TaskRunner {
         taskRunnerResultBuilder.withSuccess();
         taskRunnerResultBuilder.withTimestampFinish(LocalDateTime.now());
         return taskRunnerResultBuilder.build();
+    }
+
+    public List<TaskRunnerResult> run(String... targets) {
+        List<TaskRunnerResult> taskRunnerResultList = new ArrayList<>();
+        for (String target : targets) {
+            TaskRunnerResult taskRunnerResult = run(target);
+            taskRunnerResultList.add(taskRunnerResult);
+            if (!taskRunnerResult.isSuccess()) break;
+        }
+        return taskRunnerResultList;
     }
 
     private TaskRunnerResultBuilder completeResultWithTaskExecutionException(TaskRunnerResultBuilder taskRunnerResultBuilder, String taskName, TaskExecutionException e) {
