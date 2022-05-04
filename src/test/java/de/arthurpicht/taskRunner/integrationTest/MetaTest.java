@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UpToDateTest {
+public class MetaTest {
 
     private static final List<String> executionSequenceCache = new ArrayList<>();
 
@@ -31,37 +31,43 @@ public class UpToDateTest {
                 .withName("B")
                 .withDescription("task B")
                 .withDependencies("C")
-                .inputChanged(() -> false)
-                .outputExists(() -> true)
                 .execute(() -> executionSequenceCache.add("This is task B."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
                 .withName("A")
                 .withDescription("task A")
-                .asTarget()
                 .withDependencies("B")
                 .execute(() -> executionSequenceCache.add("This is task A."))
+                .build());
+
+        taskRegistryBuilder.withTask(new TaskBuilder()
+                .withName("THE-TASK")
+                .withDescription("task")
+                .asTarget()
+                .asMetaTask()
+                .withDependencies("A")
                 .build());
 
         return taskRegistryBuilder.build();
     }
 
     @Test
-    void demoUpToDate() {
+    void demoMetaTask() {
         TaskRegistry taskRegistry = createTaskRegistry();
         TaskRunner taskRunner = new TaskRunner(taskRegistry);
-        TaskRunnerResult taskRunnerResult = taskRunner.run("A");
+        TaskRunnerResult taskRunnerResult = taskRunner.run("THE-TASK");
 
         assertTrue(taskRunnerResult.isSuccess());
-        assertEquals("A", taskRunnerResult.getTarget());
-        System.out.println("TaskList: " + Strings.listing(taskRegistry.getTaskList("A"), ", "));
+        assertEquals("THE-TASK", taskRunnerResult.getTarget());
+        System.out.println("TaskList: " + Strings.listing(taskRegistry.getTaskList("THE-TASK"), ", "));
 
-        assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskList());
-        assertEquals(taskRegistry.getTaskList("A"), taskRunnerResult.getTaskListSuccess());
+        assertEquals(taskRegistry.getTaskList("THE-TASK"), taskRunnerResult.getTaskList());
+        assertEquals(taskRegistry.getTaskList("THE-TASK"), taskRunnerResult.getTaskListSuccess());
         assertThrows(IllegalStateException.class, taskRunnerResult::getTaskFailed);
         assertEquals("This is task C.", executionSequenceCache.get(0));
-        assertEquals("This is task A.", executionSequenceCache.get(1));
+        assertEquals("This is task B.", executionSequenceCache.get(1));
+        assertEquals("This is task A.", executionSequenceCache.get(2));
     }
 
 }

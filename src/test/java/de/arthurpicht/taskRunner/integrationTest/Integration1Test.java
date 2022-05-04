@@ -23,51 +23,51 @@ public class Integration1Test {
         TaskRegistryBuilder taskRegistryBuilder = new TaskRegistryBuilder();
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("D")
-                .description("task D")
+                .withName("D")
+                .withDescription("task D")
                 .execute(() -> executionSequenceCache.add("This is task D."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("E")
-                .description("task E")
+                .withName("E")
+                .withDescription("task E")
                 .execute(() -> executionSequenceCache.add("This is task E."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("C")
-                .description("task C")
-                .dependencies("D", "E")
+                .withName("C")
+                .withDescription("task C")
+                .withDependencies("D", "E")
                 .execute(() -> executionSequenceCache.add("This is task C."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("B")
-                .description("task B")
-                .dependencies("C")
+                .withName("B")
+                .withDescription("task B")
+                .withDependencies("C")
                 .execute(() -> executionSequenceCache.add("This is task B."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("A")
-                .description("task A")
-                .isTarget()
-                .dependencies("B")
+                .withName("A")
+                .withDescription("task A")
+                .asTarget()
+                .withDependencies("B")
                 .execute(() -> executionSequenceCache.add("This is task A."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("Y")
-                .description("task Y")
-                .dependencies("C")
+                .withName("Y")
+                .withDescription("task Y")
+                .withDependencies("C")
                 .execute(() -> executionSequenceCache.add("This is task Y."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("X")
-                .description("task X")
-                .isTarget()
-                .dependencies("Y")
+                .withName("X")
+                .withDescription("task X")
+                .asTarget()
+                .withDependencies("Y")
                 .execute(() -> executionSequenceCache.add("This is task X."))
                 .build());
 

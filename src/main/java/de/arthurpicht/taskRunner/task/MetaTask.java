@@ -7,39 +7,23 @@ import java.util.Set;
 import static de.arthurpicht.utils.core.assertion.MethodPreconditions.assertArgumentNotNull;
 import static de.arthurpicht.utils.core.assertion.MethodPreconditions.assertArgumentNotNullAndNotEmpty;
 
-public class BasicTask implements Task {
+public class MetaTask implements Task {
 
     private final String name;
     private final String description;
     private final boolean isTarget;
     private final Set<String> dependencies;
-    private final TaskSkipFunction taskSkipFunction;
-    private final TaskPreconditionFunction taskPrecondition;
-    private final InputChangedFunction inputChanged;
-    private final OutputExistsFunction outputExists;
-    private final TaskExecutionFunction taskExecution;
 
-    public BasicTask(
+    public MetaTask(
             String name,
             String description,
             boolean isTarget,
-            Set<String> dependencies,
-            TaskSkipFunction taskSkipFunction,
-            TaskPreconditionFunction taskPrecondition,
-            InputChangedFunction inputChanged,
-            OutputExistsFunction outputExists,
-            TaskExecutionFunction taskExecution) {
+            Set<String> dependencies) {
         assertArgumentNotNullAndNotEmpty("name", name);
-        assertArgumentNotNull("taskExecution", taskExecution);
         this.name = name;
         this.description = description;
         this.isTarget = isTarget;
         this.dependencies = Collections.unmodifiableSet(dependencies);
-        this.taskSkipFunction = taskSkipFunction;
-        this.taskPrecondition = taskPrecondition;
-        this.inputChanged = inputChanged;
-        this.outputExists = outputExists;
-        this.taskExecution = taskExecution;
     }
 
     @Override
@@ -58,7 +42,7 @@ public class BasicTask implements Task {
     }
 
     public boolean isMeta() {
-        return false;
+        return true;
     }
 
     @Override
@@ -68,34 +52,34 @@ public class BasicTask implements Task {
 
     @Override
     public TaskSkipFunction skip() {
-        return this.taskSkipFunction;
+        return null;
     }
 
     @Override
     public TaskPreconditionFunction precondition() {
-        return this.taskPrecondition;
+        return null;
     }
 
     @Override
     public InputChangedFunction inputChanged() {
-        return this.inputChanged;
+        return null;
     }
 
     @Override
     public OutputExistsFunction outputExists() {
-        return this.outputExists;
+        return null;
     }
 
     @Override
     public TaskExecutionFunction getExecution() {
-        return this.taskExecution;
+        return new NoopTaskExecution();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BasicTask basicTask = (BasicTask) o;
+        MetaTask basicTask = (MetaTask) o;
         return name.equals(basicTask.name);
     }
 

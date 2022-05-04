@@ -9,6 +9,7 @@ public class TaskBuilder {
     private String name;
     private String description;
     private boolean isTarget;
+    private boolean isMeta;
     private Set<String> dependencies;
     private TaskSkipFunction taskSkipFunction;
     private TaskPreconditionFunction taskPrecondition;
@@ -20,6 +21,7 @@ public class TaskBuilder {
         this.name = "";
         this.description = "";
         this.isTarget = false;
+        this.isMeta = false;
         this.dependencies = new LinkedHashSet<>();
         this.taskSkipFunction = null;
         this.taskPrecondition = null;
@@ -28,22 +30,27 @@ public class TaskBuilder {
         this.taskExecution = null;
     }
 
-    public TaskBuilder name(String name) {
+    public TaskBuilder withName(String name) {
         this.name = name;
         return this;
     }
 
-    public TaskBuilder description(String description) {
+    public TaskBuilder withDescription(String description) {
         this.description = description;
         return this;
     }
 
-    public TaskBuilder isTarget() {
+    public TaskBuilder asTarget() {
         this.isTarget = true;
         return this;
     }
 
-    public TaskBuilder dependencies(String... dependencies) {
+    public TaskBuilder asMetaTask() {
+        this.isMeta = true;
+        return this;
+    }
+
+    public TaskBuilder withDependencies(String... dependencies) {
         this.dependencies = new LinkedHashSet<>(Arrays.asList(dependencies));
         return this;
     }
@@ -79,21 +86,36 @@ public class TaskBuilder {
         return this;
     }
 
-    public BasicTask build() {
+    public Task build() {
         if (this.name.equals(""))
             throw new TaskDefinitionException("No name specified for task.");
-        if (this.taskExecution == null)
-            throw new TaskDefinitionException("No execution specified for task '" + this.name + "'.");
-        return new BasicTask(
-                this.name,
-                this.description,
-                this.isTarget,
-                this.dependencies,
-                this.taskSkipFunction,
-                this.taskPrecondition,
-                this.inputChanged,
-                this.outputExists,
-                this.taskExecution);
+        if (this.isMeta) {
+            if (this.taskSkipFunction != null ||
+                    this.taskPrecondition != null ||
+                    this.inputChanged != null ||
+                    this.outputExists != null ||
+                    this.taskExecution != null)
+                throw new TaskDefinitionException("No definition of functions allowed as task is specified as meta task.");
+
+            return new MetaTask(
+                    this.name,
+                    this.description,
+                    this.isTarget,
+                    this.dependencies);
+        } else {
+            if (this.taskExecution == null)
+                throw new TaskDefinitionException("No execution specified for task '" + this.name + "'.");
+            return new BasicTask(
+                    this.name,
+                    this.description,
+                    this.isTarget,
+                    this.dependencies,
+                    this.taskSkipFunction,
+                    this.taskPrecondition,
+                    this.inputChanged,
+                    this.outputExists,
+                    this.taskExecution);
+        }
     }
 
 }

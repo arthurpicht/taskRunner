@@ -23,23 +23,23 @@ public class FailTaskExecutionTest {
         TaskRegistryBuilder taskRegistryBuilder = new TaskRegistryBuilder();
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("C")
-                .description("task C")
+                .withName("C")
+                .withDescription("task C")
                 .execute(() -> executionSequenceCache.add("This is task C."))
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("B")
-                .description("task B")
-                .dependencies("C")
+                .withName("B")
+                .withDescription("task B")
+                .withDependencies("C")
                 .execute(() -> {throw new TaskExecutionException("Bye.");})
                 .build());
 
         taskRegistryBuilder.withTask(new TaskBuilder()
-                .name("A")
-                .description("task A")
-                .isTarget()
-                .dependencies("B")
+                .withName("A")
+                .withDescription("task A")
+                .asTarget()
+                .withDependencies("B")
                 .execute(() -> executionSequenceCache.add("This is task A."))
                 .build());
 

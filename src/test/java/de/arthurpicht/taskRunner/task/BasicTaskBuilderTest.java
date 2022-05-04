@@ -12,12 +12,12 @@ class BasicTaskBuilderTest {
     @Test
     void simple() {
 
-        BasicTask task = new TaskBuilder()
-                .name("test")
-                .description("description for task")
-                .isTarget()
+        Task task = new TaskBuilder()
+                .withName("test")
+                .withDescription("description for task")
+                .asTarget()
                 .execute(() -> System.out.println("Hello world!"))
-                .dependencies("task1", "task2")
+                .withDependencies("task1", "task2")
                 .build();
 
         assertEquals("test", task.getName());

@@ -4,6 +4,8 @@ import com.diogonunes.jcolor.Ansi;
 import com.diogonunes.jcolor.Attribute;
 import de.arthurpicht.taskRunner.TaskRunner;
 import de.arthurpicht.taskRunner.runner.TaskRunnerBuilder;
+import de.arthurpicht.taskRunner.task.MetaTask;
+import de.arthurpicht.taskRunner.task.Task;
 import de.arthurpicht.taskRunner.taskRegistry.TaskRegistry;
 import de.arthurpicht.utils.core.strings.Strings;
 
@@ -15,7 +17,7 @@ public class StandardTaskRunner {
                 .withTaskRegistry(taskRegistry)
                 .withOnPreExecuteCallback(task -> {
                     System.out.print(
-                            Strings.fillUpAfter("[" + task.getName() + "] ... ", ' ', taskColumnWidth));
+                            Strings.fillUpAfter("[" + getExtendedTaskName(task) + "] ", ' ', taskColumnWidth));
                 })
                 .withOnSuccessCallback(task -> {
                     System.out.println(Ansi.colorize("OK", Attribute.GREEN_TEXT()));
@@ -42,6 +44,12 @@ public class StandardTaskRunner {
                     if (showStacktrace) runtimeException.printStackTrace();
                 })
                 .build();
+    }
+
+    private static String getExtendedTaskName(Task task) {
+        String taskName = task.getName();
+        if (task instanceof MetaTask) taskName += "*";
+        return taskName;
     }
 
 }

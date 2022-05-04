@@ -10,6 +10,8 @@ public interface Task {
 
     public boolean isTarget();
 
+    public boolean isMeta();
+
     public Set<String> getDependencies();
 
     default public boolean hasSkipFunction() {
