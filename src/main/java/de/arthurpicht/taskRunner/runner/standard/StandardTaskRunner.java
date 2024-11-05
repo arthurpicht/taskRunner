@@ -17,7 +17,7 @@ public class StandardTaskRunner {
                 .withTaskRegistry(taskRegistry)
                 .withOnPreExecuteCallback(task -> {
                     System.out.print(
-                            Strings.fillUpAfter("[" + getExtendedTaskName(task) + "] ", ' ', taskColumnWidth));
+                            Strings.fillUpRight("[" + getExtendedTaskName(task) + "] ", ' ', taskColumnWidth));
                 })
                 .withOnSuccessCallback(task -> {
                     System.out.println(Ansi.colorize("OK", Attribute.GREEN_TEXT()));
