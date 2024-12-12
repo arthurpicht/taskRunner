@@ -20,6 +20,9 @@ public class Integration1Test {
 
     private TaskRegistry createTaskRegistry() {
 
+        // A(target) -> B -> C
+        // X(target) -> Y -> C -> D
+        //                     -> E
         TaskRegistryBuilder taskRegistryBuilder = new TaskRegistryBuilder();
 
         taskRegistryBuilder.withTask(new TaskBuilder()
